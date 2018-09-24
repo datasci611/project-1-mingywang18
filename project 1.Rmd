@@ -1,0 +1,192 @@
+---
+title: "Project One"
+author: "Mingyi Wang 730268300"
+date: "9/16/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(ggmap)
+library(maps)
+```
+
+#1. `msleep`
+
+```{r,include=FALSE}
+##read in data
+sleep <- as.tibble(msleep)
+```
+
+```{r,echo=FALSE}
+## plot sleep~vore among small or large weight mammals
+sleep %>%
+  mutate(bdwt = bodywt>median(bodywt)) %>%
+  group_by(vore,bdwt) %>%
+  summarise(average_sleep = mean(sleep_total)) %>%
+  ggplot()+
+    geom_col(mapping = aes(x = vore,y = average_sleep,fill = bdwt),position = "dodge")+
+    ylab("average amount of sleep")+
+    guides(fill = guide_legend(title = NULL))+
+    scale_fill_discrete(labels = c("Small Weight","Large Weight"))
+```
+
+```{r,include=FALSE}
+## calculate the differece of average sleep 
+## between small and large weight mammals
+mean(sleep$sleep_total)
+largewt_sleep <- mean(subset(sleep,bodywt > median(bodywt))$sleep_total)
+smallwt_sleep <- mean(subset(sleep,bodywt <= median(bodywt))$sleep_total)
+(diff <- smallwt_sleep - largewt_sleep)
+```
+
+```{r,include=FALSE}
+## sleep most and least mammals in each vore
+sleep %>%
+  group_by(vore) %>%
+  filter(min_rank(sleep_total)==1|min_rank(-sleep_total)==1) %>%
+  arrange(vore) %>%
+  select(name,vore,conservation,sleep_total,bodywt)
+```
+
+> This figure was derived from the "msleep" data set in R, which is taken from a quantitative, theoretical study of mammalian sleep. The data set contains 83 obersavations (different mammals) within 4 types of vores(carnivore, omivore, herbivore and insectivore). The average total sleep time of all mammals is 10.43 hours per day. But it is interesting to find that the body weight of mammals has something to do with sleep. Small weight mammals sleep 4.25 hours more than large weight mammals per day in average. Giraffe sleeps least with 1.9 hours per day, pilot whale is the second least with 2.7 hours per day. However, thick-tailed opposum and little brown bat use almost 83.3% of their life sleeping.
+
+> For future steps, we could try to figure out the relationship between sleep cycle and conservation. Also, if possible, we can collect more data on genus (or genes) which might be helpful to figure out what kind of genes contribute to sleep.
+
+
+#2. `Storms`
+```{r,include=FALSE}
+## read in data "storms"
+storm <- as.tibble(storms)
+## create the world map
+world <- map_data("world")
+```
+
+```{r,echo=FALSE,warning=FALSE}
+## plot tropical visits ~ year
+  storm %>%
+  group_by(year,status,name) %>%
+  ggplot(mapping = aes(x = year,color=status))+
+    geom_freqpoly(bins=41)+
+    ylab("total time of tropical storm")+
+    facet_grid(status ~.)
+```
+```{r,include=FALSE}
+## filter the longest stay
+storm %>%
+  group_by(name) %>%
+  mutate(number=n()) %>%
+  arrange(-number)
+storm
+## calculate the exact days
+207*6/24
+```
+
+>The data set "Storms" in R is from NOAA Atlantic hurricane database best track data. It includes 198 tropical storms from 1975 to 2015. This plot reveals how many hours(y-axis represents count of records and each record lasts for 6 hours) does tropical storm visit in a year. The longest duration of a tropical storm is 51.74 days in 1981 whose name is Emily. The distributions of different tropical storms share similar changes. Before 2000, the number of visits of hurricane, tropical depression and tropical storms grows in fluctuation. But after 2000, the number of visit of hurricane and tropical depression gradually decrease while tropical storm smoothly fluctuated. In addition, I am curious about where the tropical storms happens most frequently.
+
+```{r,echo=FALSE}
+##plot the distribution of maximum wind speed on world map
+storm %>%
+  group_by(name) %>%
+  mutate(max_wind=max(wind)) %>%
+  ggplot()+
+    geom_polygon(data = world, aes(x=long,y=lat,group=group), color="grey", fill="white")+
+    geom_point(mapping = aes(x = long,y = lat, color = max_wind,alpha = 0.1))+
+    scale_color_gradient2(low="blue",high="red",mid="white")+
+    coord_cartesian(xlim = c(-100,-20),ylim = c(0,60))+
+    ylab("latitude")+
+    xlab("longitudu")+
+    facet_grid(~status)
+```
+```{r,include=FALSE}
+## calculate average maximum wind speed 
+## of three types of tropical storms
+mean(subset(storm,status=="hurricane")$wind)
+mean(subset(storm,status=="tropical storm")$wind)
+mean(subset(storm,status=="tropical depression")$wind)
+```
+
+>From this plot,we can see that the maximum wind speed of hurricane (85.97 in knots)is way faster than tropical depression(27.27 in knots) and tropical storm(45.81 in knots). Compared to the center of Atlantic Ocean, Hurricane is much stronger when it is close to the coastal area. And southern east coast in America endured more hurricane threat than northern east coast. Also, tropical storm happened more frequently than tropical depression which merely took place in the north.
+
+>As the data set contains variables air pressure and diameter of the area experiencing tropical storm strengh winds, it might be interesing to see how the tropical storms evolve from formation to the last stage.
+
+#3. `Titanic`
+```{r,include=FALSE}
+## read in data
+ttnic <- as.tibble(Titanic)
+```
+
+```{r,echo=FALSE}
+## plot survival numbers ~ class
+## based on gender
+ggplot(data = ttnic)+
+  geom_col(mapping = aes(x = Sex,y = n,fill = Survived))+
+  facet_grid(~Class)+
+  ylab("survival populaiton")
+```
+
+```{r,echo=FALSE,warning=FALSE}
+## plot survival rate ~ age
+ggplot(data = ttnic)+
+  geom_col(mapping = aes(x = Age,y = n,fill = Survived),position = "fill")+
+  facet_grid(~Class)+
+  ylab("probability of survival")
+```
+
+>The data set reveals investigation of the famous sinking of the Titanic which names `Titanic` in R. The source is based on data originally collected by the British Board of Trade in 1990 and contains class, sex, age and survival status. The female survival rate in the first class, second class and crew class are all more than 85%. Also, children's survival rate is 100%. The result shows the well known 'women and children first' policy worked in the Titanic sinking disaster. However, the policy didn't hold in saving the women and children in the third calss.
+
+```{r,include=FALSE}
+## count total survival number in each class
+ttnic %>%
+  group_by(Class) %>%
+  filter(Survived=='Yes') %>%
+  summarise(population=sum(n))
+```
+
+>As we all know, the ticket of the first class is more expensive than the second class and then the third. So the better class is supposed to be better equipped with not only entertainment facilities but also rescue equipments. However, what surprises me is the total survival number in the second class should be the least! It is only 50% of the survival number in crew class. It might be interesting to think about why this happened.
+
+>Since recently more and more data on Titanic Sinking Affair are open on Internet, to do further analysis on this topic, I think we can look into more variabls like family size, cabin location and ticket fare to learn more about survival rate.
+
+#4. `txhousing`
+
+```{r,include=FALSE}
+## read in data
+tx <- as.tibble(txhousing)
+```
+
+```{r,echo=FALSE,warning=FALSE}
+## plot total sales of different cities
+ggplot(data=tx)+
+  geom_boxplot(mapping = aes(x=city,y=sales))+
+  coord_flip()+
+  geom_hline(yintercept = 1000,color='red')+
+    annotate('text',label='Less sales',x=40,y=700,color='red')+
+    annotate('text',label='More sales',x=35,y=3000,color='red')
+```
+
+```{r,include=FALSE}
+## rank the most annual sale
+tx %>%
+  group_by(year,city) %>%
+  mutate(average=mean(sales)) %>%
+  arrange(desc(average))
+## rank the least annual sale
+tx %>%
+  group_by(year,city) %>%
+  mutate(average=mean(sales)) %>%
+  arrange(average)
+```
+
+>The plot is derived from "txhousing" data set in R. This data set introduces the housing market in Texas containing 46 cities in MLS area provided by the TAMU estate center. 89.1% of cities sale less than 1000 while only four big cites(Huston, Austin, San Antijo and Dallas) sale more than 1000. The most annual sale happened in Huston with surprisingly 6951 sales in 2014. The least annual sale happened in San Marcos with 17.5 in 2009. I think the least annual sale might be attributed to 2008 financial crisis.
+
+>As a next step, we can take a look at the relationship between "Median sale price" and "Number of sales". Also, figuring out whether sale price relates to month would be interesting.
+
+
+
+
+
