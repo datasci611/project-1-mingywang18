@@ -1,0 +1,144 @@
+---
+title: "Project2"
+author: "Mingyi Wang"
+date: "10/21/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE,echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,echo=FALSE,include=FALSE}
+library(tidyverse)
+library(gridExtra)
+library(kableExtra)
+source("/Users/wmy/Desktop/data611/plot_yrtemp_function.R")
+source("/Users/wmy/Desktop/data611/summary_extreme_function.R")
+source("/Users/wmy/Desktop/data611/read_data.R")
+```
+
+
+
+
+>How do you feel about the past summer in 2018? Was it hotter compared with previous years? If you did feel something, that's exactly what researchers found out. Seke Hausfather wrote on August 1st published at [CarbonBrief][1] that temperatures on the Earths's surface in the first half of the 2018 were lower than over the same period for the three previous years(2015), however, the world is quickly switching to El Nino conditions which contribute to a somewhat warmer finish to the year. As is [recorded][2], 2014 witnessed unusual warmth from when I started to pay more attention to protect environment. So I am going to show more details about 12 months of temperature across the U.S and then compare 4 months of temperature between 2014 and 2018 in Charlotte.
+
+[1]:https://www.carbonbrief.org/state-of-the-climate-2018-set-to-be-fourth-warmest-year-despite-cooler-start "CarbonBrief"
+[2]:https://www.ncdc.noaa.gov/sotc/summary-info/global/201506 "recorded"
+
+[3]:https://www.wunderground.com "Weather Underground"
+
+[4]:https://weather.com/weather/monthly/l/USNC0121:1:US "the weather channel"
+
+#1.Data
+>The data of 12 months temperature from 7/01/2014 to 6/30/2015 is gathered from [Weather Underground][3] which records the maximum, minimum and average temperature of each day, and maximum, minimum and average temperature of history. The data of 4 months temperature from 6/01/2018 to 9/30/2018 in Charlotte is gathered from [The Weather Channel][4] which only contains daily actual maximum, minimum and average temperature.
+
+
+
+
+#2.12 Months Temperature of Four States
+>Charlotte endures unusual 5 days of high temperature in June and 3 days of low temperature in November which were all historically highest or lowest extreme weather on those days. From the Figure 1 we can see that other than those days, the weather of rest of the days were way better than historical average weather, not so hot and not so cold. The highest temperature of all year round was 88°F, the coldest temperature was 18°F.
+
+```{r,fig.width=10,fig.height=3,fig.show='hold',fig.align='center',fig.cap="Fig 1: Temperature from 7/01/2014 to 6/30/2015",echo=FALSE}
+plot_temp(nc,"Charlotte, N.C.")
+```
+
+```{r,echo=FALSE}
+pos_record <- matrix(data=NA,nrow=365,ncol=2)
+for (i in 1:365){
+  if (nc$actual_max_temp[i]==nc$record_max_temp[i]) {pos_record[i,1]=i}
+  if (nc$actual_min_temp[i]==nc$record_min_temp[i]) {pos_record[i,2]=i}
+}
+date_of_maximum_temperature=nc$date[complete.cases(pos_record[,1])]
+date_of_minimum_temperature=nc$date[complete.cases(pos_record[,2])]
+com=data.table::data.table(date_of_maximum_temperature,date_of_minimum_temperature)
+kable(com,caption = "Table 1: Extreme temperature date of Charlotte in 2015")%>%
+      kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) 
+```
+
+>Compared with Charlotte, New York was colder in winter but they shared similar weather in summer. From the actual minimal and maximum weather(the less dark brown line), we can see that more than 70% of days in Feburary were less than 40°F, and the cold last for about three months from January to March. Also, the temperature changed slightly day and night.
+
+```{r,fig.width=10,fig.height=3,fig.show='hold',fig.align='center',fig.cap="Fig 2: Temperature from 7/01/2014 to 6/30/2015",echo=FALSE}
+plot_temp(ny,"New York")
+```
+
+
+> Los Angeles is well-known for its year-round warm weather with average 68.6°F in 2015. Although it didn't have extreme cold weather, LA still had four days with record highs in March(3 days were consecutive). From May to September, the Figure 3 reveals that the daily temperature varied from 65°F to 90°F which fluctuated less than historical record. The highest temperature all over the year was 90°F, the coldest temperature was 48°F.
+
+```{r,fig.width=10,fig.height=3,fig.show='hold',fig.align='center',fig.cap="Fig 3: Temperature from 7/01/2014 to 6/30/2015",echo=FALSE}
+plot_temp(la,"Los Angeles")
+```
+
+```{r,echo=FALSE}
+la_max = c("2014-9-16","2015-3-13","2015-3-14","2015-3-15","2015-3-27")
+kable(la_max,caption = "Table 2: Extreme temperature date of Los Angeles in 2015",col.names = "date of maximum temperature",align = 'center') %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) 
+```
+
+>The weather in Jacksonville follows the historical record weather pattern in 2015. It has small range of daily temperature which is shown in smoothing curve(the darkest line). Jacksonville broke the record both in highs and lows. It reached maximum temperature four times all year round in August, November, January and March. On the other hand, it reached minimum temperature five times also seperately in 4 months, July, August, November(2 consecutive times) and February.
+
+```{r,fig.width=10,fig.height=3,fig.show='hold',fig.align='center',fig.cap="Fig 4: Temperature from 7/01/2014 to 6/30/2015",echo=FALSE}
+plot_temp(jack,"Jacksonville, Florida")
+```
+
+
+
+
+>As is demonstrated in Table 3, all maximum temperature in four states are 20 or so degrees higher than average maximum temperature in each state. This means that many of states in US in 2015 endured extremely hot weather more or less. In particular, Los Angeles has 60% days surpass maximum average temperature while only 12.9% days were less than minimum average temperature. 
+
+```{r,echo=FALSE}
+nc_summary <- summary_extreme(nc,"Charlotte, N.C.")
+ny_summary <- summary_extreme(ny,"New York")
+la_summary <- summary_extreme(la,"Los Angeles")
+jack_summary <- summary_extreme(jack,"Jacksonville, Florida")
+rbind(nc_summary,ny_summary,la_summary,jack_summary) %>%
+kable(caption = "Table 3: Extreme weather Summary in Four States",col.names = c("State","Temperature more than maximum average (°F)","Temperature less than minimum average (°F)","Days more than maximum average(Days)","Days less than minimum average(Days)")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) 
+
+```
+
+
+#3.Temperature in 2014 vs 2018 of Charlotte
+>From above, we have learned how 12 months temperature varies compared with historical records in four states from July,2014 to June 2015. Now, do you want to further know more about how temperature changes over year? Let's introduce data which contains four months temperature in Charlotte from June,2018 to Sept,2018 to illustrate this problem.
+
+>Figure 2 states the difference between the temperature of the same day in 2014 and 2018. Red part means that the daily average temperature of 2018 is higher than that of 2014. Accordingly, the green part means the daily average temperature of 2018 is lower than that of 2014. However, pay attention to the green part gathering in June, they are from 2015. It is obvious to see since July 1st, 85% days have higher temperature in 2018 than 2014. And only 25.4% days have higher temperature in 2014 than 2018. From this figure, we can roughly conclude that the overall temperature is increasing from 2014 to 2018. 
+
+```{r,fig.cap="Fig 2: Average Temperature of 2014 vs 2018",fig.show='hold',echo=FALSE,fig.align='center'}
+nc2018 <- read.csv("/Users/wmy/Desktop/data 611/charlotte2018weather.csv")%>%
+  mutate(day=sub('^.....',"",date)) 
+nc2014 <- nc %>%
+  mutate(day=sub('^.....',"",date))
+
+#join two table together
+#calculate difference 2014 vs 2018
+comparison <- left_join(nc2018,nc2014,by="day") %>%
+  select(day,max,average,min,actual_max_temp,actual_mean_temp,actual_min_temp) %>%
+  mutate(diff_mean = average-actual_mean_temp,
+         number = c(1:123))
+comp1 <- subset(comparison,diff_mean>=0)
+comp2 <- subset(comparison,diff_mean<0)
+
+ggplot()+
+  geom_bar(data=comp1,aes(x=number,y=diff_mean),stat="identity",fill="red",alpha=0.6)+
+  geom_bar(data=comp2,aes(x=number,y=diff_mean),stat="identity",fill="green",alpha=0.5)+
+  labs(
+      x = expression(paste("")),
+      y = expression(paste("Temperature difference", "(°F)")),
+      color = "Grass origin"
+      )+
+  scale_x_continuous(breaks = seq(0,123,15),
+                     labels = c("June 1","June 15","Jul 1","Jul 15","Aug 1","Aug 15","Sept 1","Sept 15","Sept 30"))+
+  scale_y_continuous(breaks = seq(-10,20,4),
+                     labels = paste(seq(-10,20,4),"°F"))+
+  annotate("text",label='74.6% Days are warmer in 2018 than 2014',x=30,y=17)+
+  theme_light()
+```
+
+
+#4.Further Steps
+> To be more convincing, we should gather data from 2015, 2016 and 2017 to draw the conclusion of yearly change in temperature. It would be better if we apply statistical test to examine the result.
+> It would be interesting to look at what results in temperature change. But that's quite another question.
+
+
+
+

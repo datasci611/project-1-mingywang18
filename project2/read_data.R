@@ -1,0 +1,5 @@
+nc <- read.csv("/Users/wmy/Desktop/data611/KCLT.csv")
+ny <- read.csv("/Users/wmy/Desktop/data611/KNYC.csv")
+la <- read.csv("/Users/wmy/Desktop/data611/KCQT.csv")
+jack <- read.csv("/Users/wmy/Desktop/data611/KJAX.csv")
+nc2018 <- read.csv("/Users/wmy/Desktop/data611/charlotte2018weather.csv")
